@@ -1,14 +1,13 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 package main;
 
-option go_package = "./pb";
+option go_package = ".;pb";
 
 service ActivityService {
     rpc RegisterUser(User) returns (UserResponse) {}
     rpc GetUser(Name) returns (UserResponse) {}
-    rpc UpdateUser(Name) returns (UserResponse) {}
+    rpc UpdateUserInfo(UpdateUser) returns (UserResponse) {}
     rpc AddActivity(Activity) returns (UserResponse) {}
     rpc ActivityIsDone(ActivityRequest) returns (Done) {}
     rpc ActivityIsValid(ActivityRequest) returns (Valid) {}
@@ -22,20 +21,16 @@ message User {
     Activity activity = 4;
 }
 
-message Activity {
-    Type type = 1;
-    google.protobuf.Timestamp time = 2;
-    google.protobuf.Duration duration = 3;
-    string label = 4;
+message UpdateUser {
+    User user = 1;
 }
 
-enum Type {
-    PLAY = 0;
-    SLEEP = 1;
-    EAT  = 2;
-    READ = 3;
-
-};
+message Activity {
+    string type = 1;
+    google.protobuf.Timestamp time = 2;
+    int32 duration = 3;
+    string label = 4;
+}
 
 message UserRegisterResponse {
     User user = 1;
@@ -46,11 +41,12 @@ message Name {
 }
 
 message UserResponse{
-    User user = 1;
+    string response = 1;
 }
 
 message ActivityRequest {
-    Type type = 1;
+    string type = 1;
+    string username = 2;
 }
 
 message Done {

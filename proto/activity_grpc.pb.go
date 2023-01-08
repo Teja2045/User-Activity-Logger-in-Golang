@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ActivityServiceClient interface {
 	RegisterUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
 	GetUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*UserResponse, error)
-	UpdateUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*UserResponse, error)
+	UpdateUserInfo(ctx context.Context, in *UpdateUser, opts ...grpc.CallOption) (*UserResponse, error)
 	AddActivity(ctx context.Context, in *Activity, opts ...grpc.CallOption) (*UserResponse, error)
 	ActivityIsDone(ctx context.Context, in *ActivityRequest, opts ...grpc.CallOption) (*Done, error)
 	ActivityIsValid(ctx context.Context, in *ActivityRequest, opts ...grpc.CallOption) (*Valid, error)
@@ -56,9 +56,9 @@ func (c *activityServiceClient) GetUser(ctx context.Context, in *Name, opts ...g
 	return out, nil
 }
 
-func (c *activityServiceClient) UpdateUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*UserResponse, error) {
+func (c *activityServiceClient) UpdateUserInfo(ctx context.Context, in *UpdateUser, opts ...grpc.CallOption) (*UserResponse, error) {
 	out := new(UserResponse)
-	err := c.cc.Invoke(ctx, "/main.ActivityService/UpdateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/main.ActivityService/UpdateUserInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (c *activityServiceClient) ActivityIsValid(ctx context.Context, in *Activit
 type ActivityServiceServer interface {
 	RegisterUser(context.Context, *User) (*UserResponse, error)
 	GetUser(context.Context, *Name) (*UserResponse, error)
-	UpdateUser(context.Context, *Name) (*UserResponse, error)
+	UpdateUserInfo(context.Context, *UpdateUser) (*UserResponse, error)
 	AddActivity(context.Context, *Activity) (*UserResponse, error)
 	ActivityIsDone(context.Context, *ActivityRequest) (*Done, error)
 	ActivityIsValid(context.Context, *ActivityRequest) (*Valid, error)
@@ -115,8 +115,8 @@ func (UnimplementedActivityServiceServer) RegisterUser(context.Context, *User) (
 func (UnimplementedActivityServiceServer) GetUser(context.Context, *Name) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedActivityServiceServer) UpdateUser(context.Context, *Name) (*UserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+func (UnimplementedActivityServiceServer) UpdateUserInfo(context.Context, *UpdateUser) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserInfo not implemented")
 }
 func (UnimplementedActivityServiceServer) AddActivity(context.Context, *Activity) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddActivity not implemented")
@@ -176,20 +176,20 @@ func _ActivityService_GetUser_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ActivityService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Name)
+func _ActivityService_UpdateUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUser)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ActivityServiceServer).UpdateUser(ctx, in)
+		return srv.(ActivityServiceServer).UpdateUserInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.ActivityService/UpdateUser",
+		FullMethod: "/main.ActivityService/UpdateUserInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ActivityServiceServer).UpdateUser(ctx, req.(*Name))
+		return srv.(ActivityServiceServer).UpdateUserInfo(ctx, req.(*UpdateUser))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -264,8 +264,8 @@ var ActivityService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ActivityService_GetUser_Handler,
 		},
 		{
-			MethodName: "UpdateUser",
-			Handler:    _ActivityService_UpdateUser_Handler,
+			MethodName: "UpdateUserInfo",
+			Handler:    _ActivityService_UpdateUserInfo_Handler,
 		},
 		{
 			MethodName: "AddActivity",
