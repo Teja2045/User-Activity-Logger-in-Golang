@@ -11,7 +11,6 @@ service ActivityService {
     rpc AddActivity(Activity) returns (UserResponse) {}
     rpc ActivityIsDone(ActivityRequest) returns (Done) {}
     rpc ActivityIsValid(ActivityRequest) returns (Valid) {}
-
 }
 
 message User {

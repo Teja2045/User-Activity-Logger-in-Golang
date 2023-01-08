@@ -39,12 +39,21 @@ func main() {
 
 }
 
+// simplest way to handle errors
+func HandleError(err error) {
+	if err != nil {
+		log.Fatal("error: ", err)
+	}
+}
+
+// add user service
+// input : user
+// functionality : add to database
+// output : string
 func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.UserResponse, error) {
 	username := req.Name
 	phone := req.Phone
 	email := req.Email
-
-	//addUser, err := Dbx.Queryx("INSERT INTO user_table(Name, Phone, Email) VALUES(?,?,?)", username, phone, email)
 
 	fmt.Println("uer has been added:", username, phone, email)
 
@@ -55,12 +64,16 @@ func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.U
 	return resp, nil
 }
 
+// update user service
+// input : user
+// functionality : update user in database
+// output : string
 func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser) (*pb.UserResponse, error) {
 	username := req.User.Name
 	phone := req.User.Phone
 	email := req.User.Email
 
-	fmt.Println("uer has been updated:", username, phone, email)
+	fmt.Println("user has been updated:", username, phone, email)
 
 	resp := &pb.UserResponse{
 		Response: "The user " + username + " has been updated.",
@@ -69,6 +82,10 @@ func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser
 	return resp, nil
 }
 
+// get user service
+// input : name
+// functionality : gets user details
+// output : user
 func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.UserResponse, error) {
 	username := req.Name
 
@@ -81,6 +98,10 @@ func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.UserRe
 	return resp, nil
 }
 
+// add activity service
+// input : acivity
+// functionality : add to database
+// output : string
 func (a *ActivityService) AddActivity(ctx context.Context, req *pb.Activity) (*pb.UserResponse, error) {
 	activityType := req.Type
 	label := req.Label
@@ -95,6 +116,10 @@ func (a *ActivityService) AddActivity(ctx context.Context, req *pb.Activity) (*p
 	return resp, nil
 }
 
+// activty isDone serive
+// input : username, activity
+// functionality : checks if that user had done that activity
+// output : boolean
 func (a *ActivityService) ActivityIsDone(ctx context.Context, req *pb.ActivityRequest) (*pb.Done, error) {
 	username := req.Username
 	activitytype := req.Type
@@ -108,6 +133,10 @@ func (a *ActivityService) ActivityIsDone(ctx context.Context, req *pb.ActivityRe
 	return resp, nil
 }
 
+// activty isValid serive
+// input : username, activity
+// functionality : checks if the activity done by user is valid
+// output : boolean
 func (a *ActivityService) ActivityIsValid(ctx context.Context, req *pb.ActivityRequest) (*pb.Valid, error) {
 	username := req.Username
 	activitytype := req.Type
