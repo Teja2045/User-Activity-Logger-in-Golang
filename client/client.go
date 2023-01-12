@@ -20,9 +20,12 @@ func main() {
 
 	client := pb.NewActivityServiceClient(conn)
 
+	//_________________________________________________________________________
+	//adding user details
+
 	addUserDetails := &pb.User{
 
-		Name:  "SaiTeja",
+		Name:  "saiteja",
 		Phone: "1456123789",
 		Email: "teja@yahoo.com",
 	}
@@ -35,8 +38,11 @@ func main() {
 	}
 	fmt.Println(addUser)
 
+	//_________________________________________________________________________
+	//getting user
+
 	name := &pb.Name{
-		Name: "Saiteja",
+		Name: "saiteja",
 	}
 	userDetails, err := client.GetUser(context.Background(), name)
 
@@ -47,9 +53,12 @@ func main() {
 	}
 	fmt.Println("user details are:", userDetails)
 
+	//____________________________________________________________________
+	//update user
+
 	details := &pb.UpdateUser{
 		User: &pb.User{
-			Name:  "SaiTeja",
+			Name:  "saiteja",
 			Phone: "8639218758",
 			Email: "teja@gmail.com",
 		},
@@ -64,13 +73,16 @@ func main() {
 	}
 	fmt.Println(updateUser)
 
+	//_____________________________________________________________________________________
+	// add activity
 	//startTime, _ := ptypes.TimestampProto(time.Now())
+
 	ts := timestamppb.Now()
 
 	userActivity := &pb.Activity{
 
 		Type:     "Eat",
-		Label:    "Eating",
+		Label:    "saiteja",
 		Time:     ts,
 		Duration: 6,
 	}
@@ -78,35 +90,40 @@ func main() {
 	addActivity, err := client.AddActivity(context.Background(), userActivity)
 	if err != nil {
 
-		fmt.Println("Error in updating  users using grpc client", err.Error())
+		fmt.Println("Error in adding activity", err.Error())
 
 	}
 	fmt.Println(addActivity)
 
-	activityDone := &pb.ActivityRequest{
+	//______________________________________________________________________________
+	// activity is done
+	activityDoneRequest := &pb.ActivityRequest{
 
-		Username: "SaiTeja",
+		Username: "saiteja",
 		Type:     "Eat",
 	}
 
-	checkIsDone, err := client.ActivityIsDone(context.Background(), activityDone)
+	checkIsDone, err := client.ActivityIsDone(context.Background(), activityDoneRequest)
 	if err != nil {
 
-		fmt.Println("Error in updating  users using grpc client", err.Error())
+		fmt.Println("Error in isDone()", err.Error())
 
 	}
 	fmt.Println("Activity status(isDone)", checkIsDone)
 
-	activityValid := &pb.ActivityRequest{
+	//______________________________________________________________________________
+	// activity is valid
 
-		Username: "SaiTeja",
+	ActivityRequest := &pb.ActivityRequest{
+
+		Username: "saiteja",
 		Type:     "Eat",
 	}
 
-	checkIsValid, err := client.ActivityIsValid(context.Background(), activityValid)
+	checkIsValid, err := client.ActivityIsValid(context.Background(), ActivityRequest)
 	if err != nil {
 
-		fmt.Println("Error in updating  users using grpc client", err.Error())
+		fmt.Println("Error in isValid()", err.Error())
 
 	}
 	fmt.Println("Activity status(isDone)", checkIsValid)

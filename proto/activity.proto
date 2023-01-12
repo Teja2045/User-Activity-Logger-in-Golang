@@ -17,7 +17,6 @@ message User {
     string name = 1;
     string email = 2;
     string phone = 3;
-    Activity activity = 4;
 }
 
 message UpdateUser {
@@ -31,9 +30,6 @@ message Activity {
     string label = 4;
 }
 
-message UserRegisterResponse {
-    User user = 1;
-}
 
 message Name {
     string name = 1;
