@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type User struct {
@@ -21,10 +20,10 @@ type User struct {
 }
 
 type Act struct {
-	typ      string
-	time     timestamppb.Timestamp
-	duration int
-	label    string
+	Type     string
+	Time     time.Time
+	Duration int32
+	Label    string
 }
 
 func main() {
@@ -45,20 +44,20 @@ func main() {
 	}
 
 	coll := client.Database("task1").Collection("user")
-	ts := timestamppb.Now()
+	ts := time.Now()
 
 	act1 := Act{
 
-		typ:      "Eat",
-		label:    "Eating",
-		time:     *ts,
-		duration: 6,
+		Type:     "Eat",
+		Label:    "Eating",
+		Time:     ts,
+		Duration: 6,
 	}
 	act2 := Act{
-		typ:      "Sleep",
-		label:    "Sleeping",
-		time:     *ts,
-		duration: 78,
+		Type:     "Sleep",
+		Label:    "Sleeping",
+		Time:     ts,
+		Duration: 78,
 	}
 
 	activities := []Act{
@@ -79,10 +78,29 @@ func main() {
 	}
 
 	a := finduser.Activities
-	fmt.Println(finduser.Activities)
+	fmt.Println(finduser.Name)
+	fmt.Println(len(finduser.Activities))
 	// fmt.Println(finduser.Email)
 	// fmt.Println(finduser.Phone)
-	fmt.Println(a[0].typ)
-	fmt.Println(a[1].typ)
+	fmt.Println(a[0])
+	fmt.Println(a[1])
+
+	act3 := Act{
+		Type:     "Play",
+		Label:    "Playing",
+		Time:     ts,
+		Duration: 62,
+	}
+	activities = append(activities, act3)
+	Key := "name"
+	username := "saiteja"
+	filter1 := bson.M{Key: username}
+	update := bson.M{"$set": bson.M{"activities": activities}}
+
+	res, err := coll.UpdateOne(context.TODO(), filter1, update)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print(res)
 
 }

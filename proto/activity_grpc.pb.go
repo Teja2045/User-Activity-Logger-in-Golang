@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ActivityServiceClient interface {
 	RegisterUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
-	GetUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*UserResponse, error)
+	GetUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*User, error)
 	UpdateUserInfo(ctx context.Context, in *UpdateUser, opts ...grpc.CallOption) (*UserResponse, error)
 	AddActivity(ctx context.Context, in *Activity, opts ...grpc.CallOption) (*UserResponse, error)
 	ActivityIsDone(ctx context.Context, in *ActivityRequest, opts ...grpc.CallOption) (*Done, error)
@@ -47,8 +47,8 @@ func (c *activityServiceClient) RegisterUser(ctx context.Context, in *User, opts
 	return out, nil
 }
 
-func (c *activityServiceClient) GetUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *activityServiceClient) GetUser(ctx context.Context, in *Name, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/main.ActivityService/GetUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (c *activityServiceClient) ActivityIsValid(ctx context.Context, in *Activit
 // for forward compatibility
 type ActivityServiceServer interface {
 	RegisterUser(context.Context, *User) (*UserResponse, error)
-	GetUser(context.Context, *Name) (*UserResponse, error)
+	GetUser(context.Context, *Name) (*User, error)
 	UpdateUserInfo(context.Context, *UpdateUser) (*UserResponse, error)
 	AddActivity(context.Context, *Activity) (*UserResponse, error)
 	ActivityIsDone(context.Context, *ActivityRequest) (*Done, error)
@@ -112,7 +112,7 @@ type UnimplementedActivityServiceServer struct {
 func (UnimplementedActivityServiceServer) RegisterUser(context.Context, *User) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterUser not implemented")
 }
-func (UnimplementedActivityServiceServer) GetUser(context.Context, *Name) (*UserResponse, error) {
+func (UnimplementedActivityServiceServer) GetUser(context.Context, *Name) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 func (UnimplementedActivityServiceServer) UpdateUserInfo(context.Context, *UpdateUser) (*UserResponse, error) {

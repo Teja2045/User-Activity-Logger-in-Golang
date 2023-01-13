@@ -3,10 +3,10 @@ import "google/protobuf/timestamp.proto";
 package main;
 
 option go_package = ".;pb";
-
+//protoc --go_out=. --go_opt=paths=source_relative     --go-grpc_out=. --go-grpc_opt=paths=source_relative     proto/activity.proto
 service ActivityService {
     rpc RegisterUser(User) returns (UserResponse) {}
-    rpc GetUser(Name) returns (UserResponse) {}
+    rpc GetUser(Name) returns (User) {}
     rpc UpdateUserInfo(UpdateUser) returns (UserResponse) {}
     rpc AddActivity(Activity) returns (UserResponse) {}
     rpc ActivityIsDone(ActivityRequest) returns (Done) {}

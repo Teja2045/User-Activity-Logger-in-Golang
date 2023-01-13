@@ -126,5 +126,5 @@ func main() {
 		fmt.Println("Error in isValid()", err.Error())
 
 	}
-	fmt.Println("Activity status(isDone)", checkIsValid)
+	fmt.Println("Activity is valid(isValid)", checkIsValid)
 }
