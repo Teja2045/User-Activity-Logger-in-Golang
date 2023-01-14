@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
 	pb "task1/proto"
 
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -20,111 +23,155 @@ func main() {
 
 	client := pb.NewActivityServiceClient(conn)
 
-	//_________________________________________________________________________
-	//adding user details
-
-	addUserDetails := &pb.User{
-
-		Name:  "saiteja",
-		Phone: "1456123789",
-		Email: "teja@yahoo.com",
+	rootCmd := &cobra.Command{
+		Use:   "client",
+		Short: "grpc-client",
+		Long:  `grpc-client`,
 	}
 
-	addUser, err := client.RegisterUser(context.Background(), addUserDetails)
-	if err != nil {
+	registerCmd := &cobra.Command{
+		Use:   "register",
+		Short: "| NAME | PHONE | EMAIL |",
+		Long:  "takes 3 inputs which are user details and registers a user",
+		Run: func(cmd *cobra.Command, args []string) {
+			details := &pb.User{
+				Name:  args[0],
+				Phone: "" + args[1],
+				Email: args[2],
+			}
+			addUser, err := client.RegisterUser(context.Background(), details)
+			if err != nil {
 
-		fmt.Println("Error in updating  users using grpc client", err.Error())
+				fmt.Println("Error in registering user using grpc client", err.Error())
 
-	}
-	fmt.Println(addUser)
-
-	//_________________________________________________________________________
-	//getting user
-
-	name := &pb.Name{
-		Name: "saiteja",
-	}
-	userDetails, err := client.GetUser(context.Background(), name)
-
-	if err != nil {
-
-		fmt.Println("Error in calling users using grpc client", err.Error())
-
-	}
-	fmt.Println("user details are:", userDetails)
-
-	//____________________________________________________________________
-	//update user
-
-	details := &pb.UpdateUser{
-		User: &pb.User{
-			Name:  "saiteja",
-			Phone: "8639218758",
-			Email: "teja@gmail.com",
+			}
+			fmt.Println(addUser)
 		},
 	}
 
-	updateUser, err := client.UpdateUserInfo(context.Background(), details)
+	updateCmd := &cobra.Command{
+		Use:   "update",
+		Short: "| NAME | PHONE | EMAIL |",
+		Long:  "takes 3 inputs, user name and details and updates the database",
+		Run: func(cmd *cobra.Command, args []string) {
+			details := &pb.UpdateUser{
+				User: &pb.User{
+					Name:  args[0],
+					Phone: args[1],
+					Email: args[2],
+				},
+			}
+			updateUser, err := client.UpdateUserInfo(context.Background(), details)
 
-	if err != nil {
+			if err != nil {
 
-		fmt.Println("Error in updating  users using grpc client", err.Error())
+				fmt.Println("Error in updating user using grpc client", err.Error())
 
-	}
-	fmt.Println(updateUser)
-
-	//_____________________________________________________________________________________
-	// add activity
-	//startTime, _ := ptypes.TimestampProto(time.Now())
-
-	ts := timestamppb.Now()
-
-	userActivity := &pb.Activity{
-
-		Type:     "Eat",
-		Label:    "saiteja",
-		Time:     ts,
-		Duration: 6,
-	}
-
-	addActivity, err := client.AddActivity(context.Background(), userActivity)
-	if err != nil {
-
-		fmt.Println("Error in adding activity", err.Error())
-
-	}
-	fmt.Println(addActivity)
-
-	//______________________________________________________________________________
-	// activity is done
-	activityDoneRequest := &pb.ActivityRequest{
-
-		Username: "saiteja",
-		Type:     "Eat",
+			}
+			fmt.Println(updateUser)
+		},
 	}
 
-	checkIsDone, err := client.ActivityIsDone(context.Background(), activityDoneRequest)
-	if err != nil {
+	getCmd := &cobra.Command{
+		Use:   "get",
+		Short: "| NAME |",
+		Long:  "takes 1 input which is the user name and retrieves his/her details",
+		Run: func(cmd *cobra.Command, args []string) {
+			name := &pb.Name{
+				Name: args[0],
+			}
+			userDetails, err := client.GetUser(context.Background(), name)
 
-		fmt.Println("Error in isDone()", err.Error())
+			if err != nil {
 
+				fmt.Println("Error in calling users using grpc client", err.Error())
+
+			}
+			fmt.Println("user details are:", userDetails)
+		},
 	}
-	fmt.Println("Activity status(isDone)", checkIsDone)
 
-	//______________________________________________________________________________
-	// activity is valid
+	add_activityCmd := &cobra.Command{
+		Use:   "add_activity",
+		Short: "| USERNAME | ACTIVITY TYPE | ACTIVITY DURATION |",
+		Long:  "takes 3 inputs, username and activity details",
+		Run: func(cmd *cobra.Command, args []string) {
+			ts := timestamppb.Now()
+			i, err := strconv.ParseInt(args[2], 10, 64)
+			if err != nil {
+				panic(err)
+			}
 
-	ActivityRequest := &pb.ActivityRequest{
+			userActivity := &pb.Activity{
 
-		Username: "saiteja",
-		Type:     "Eat",
+				Label:    args[0],
+				Type:     args[1],
+				Time:     ts,
+				Duration: int32(i),
+			}
+
+			addActivity, err := client.AddActivity(context.Background(), userActivity)
+			if err != nil {
+
+				fmt.Println("Error in adding activity", err.Error())
+
+			}
+			fmt.Println(addActivity)
+		},
 	}
 
-	checkIsValid, err := client.ActivityIsValid(context.Background(), ActivityRequest)
-	if err != nil {
+	activity_isDoneCmd := &cobra.Command{
+		Use:   "activity_isdone",
+		Short: "| USERNAME | ACTIVITY TYPE |",
+		Long:  "takes 2 inputs, username, activity type and checks if the activity is done by the user",
+		Run: func(cmd *cobra.Command, args []string) {
+			activityDoneRequest := &pb.ActivityRequest{
 
-		fmt.Println("Error in isValid()", err.Error())
+				Username: args[0],
+				Type:     args[1],
+			}
 
+			checkIsDone, err := client.ActivityIsDone(context.Background(), activityDoneRequest)
+			if err != nil {
+
+				fmt.Println("Error in isDone()", err.Error())
+
+			}
+			fmt.Println("Activity status(isDone)", checkIsDone)
+
+		},
 	}
-	fmt.Println("Activity is valid(isValid)", checkIsValid)
+
+	activity_isValid := &cobra.Command{
+		Use:   "activity_isValid",
+		Short: "| USERNAME | ACTIVITY TYPE |",
+		Long:  "takes 2 inputs, username, activity type and checks if the activity by the user is valid or not",
+		Run: func(cmd *cobra.Command, args []string) {
+			ActivityRequest := &pb.ActivityRequest{
+
+				Username: args[0],
+				Type:     args[1],
+			}
+
+			checkIsValid, err := client.ActivityIsValid(context.Background(), ActivityRequest)
+			if err != nil {
+
+				fmt.Println("Error in isValid()", err.Error())
+
+			}
+			fmt.Println("Activity is valid(isValid)", checkIsValid)
+		},
+	}
+
+	rootCmd.AddCommand(registerCmd)
+	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(add_activityCmd)
+	rootCmd.AddCommand(activity_isDoneCmd)
+	rootCmd.AddCommand(activity_isValid)
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }
+
+//_________________________________________________________________________
