@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//Note: short description tells the inputs for the commands, Long description, about the command functionality
 func main() {
 	grpcServer := "localhost:8082"
 
@@ -121,7 +122,7 @@ func main() {
 	}
 
 	activity_isDoneCmd := &cobra.Command{
-		Use:   "activity_isdone",
+		Use:   "activity_isDone",
 		Short: "| USERNAME | ACTIVITY TYPE |",
 		Long:  "takes 2 inputs, username, activity type and checks if the activity is done by the user",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -137,7 +138,11 @@ func main() {
 				fmt.Println("Error in isDone()", err.Error())
 
 			}
-			fmt.Println("Activity status(isDone)", checkIsDone)
+			if checkIsDone.Done {
+				fmt.Println("Activity status(isDone)", "Yes")
+			} else {
+				fmt.Println("Activity status(isDone)", "No")
+			}
 
 		},
 	}
@@ -159,7 +164,12 @@ func main() {
 				fmt.Println("Error in isValid()", err.Error())
 
 			}
-			fmt.Println("Activity is valid(isValid)", checkIsValid)
+			if checkIsValid.Valid {
+				fmt.Println("Activity is valid(isValid)", "Yes")
+			} else {
+				fmt.Println("Activity is valid(isValid)", "No")
+			}
+
 		},
 	}
 
