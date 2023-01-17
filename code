@@ -1,0 +1,25 @@
+ts := timestamppb.Now()
+
+	act1 := Act{
+
+		typ:      "Eat",
+		label:    "Eating",
+		time:     *ts,
+		duration: 6,
+	}
+	act2 := Act{
+		typ:      "Sleep",
+		label:    "Sleeping",
+		time:     *ts,
+		duration: 78,
+	}
+
+	activities := []Act{
+		act1, act2,
+	}
+	user := User{Name: "saiteja", Email: "teja123gmail.com", Phone: "8622212341", Activities: activities}
+	result, err := coll.InsertOne(context.TODO(), user)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result.InsertedID)

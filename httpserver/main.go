@@ -2,17 +2,18 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
-	"net"
-	pb "task1/proto"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"google.golang.org/grpc"
 )
 
 type User struct {
@@ -22,6 +23,30 @@ type User struct {
 	Activities []Act  `bson:"activities,omitempty"`
 }
 
+type Userj struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Phone string `json:"phone"`
+}
+type Actj struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Duration int    `json:"duration"`
+}
+
+type Actreqj struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type Actresj struct {
+	Response string `json:"response"`
+}
+
+type Getj struct {
+	Name string `json:"name"`
+}
+
 type Act struct {
 	Type     string
 	Time     time.Time
@@ -29,50 +54,34 @@ type Act struct {
 	Label    string
 }
 
-const grpcPort = ":8082"
-
-type ActivityService struct {
-	pb.UnimplementedActivityServiceServer
-}
-
 func main() {
+	//Init Router
+	r := mux.NewRouter()
 
-	log.Println("Starting application...")
+	// arrange our route
+	r.HandleFunc("/adduser", RegisterUser).Methods("POST")
+	r.HandleFunc("/getuser", GetUser).Methods("GET")
+	r.HandleFunc("/update", UpdateUserInfo).Methods("PUT")
+	r.HandleFunc("/addactivity", AddActivity).Methods("POST")
+	r.HandleFunc("/activityisdone", ActivityIsDone).Methods("GET")
+	r.HandleFunc("/activityisvalid", ActivityIsValid).Methods("GET")
 
-	// start listening for grpc
-	listen, err := net.Listen("tcp", grpcPort)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Instanciate new gRPC server
-	server := grpc.NewServer()
-
-	//register service
-	pb.RegisterActivityServiceServer(server, &ActivityService{})
-
-	log.Println("Starting grpc server on port " + grpcPort)
-
-	// Start the gRPC server in goroutine
-	server.Serve(listen)
+	// set our port address
+	log.Fatal(http.ListenAndServe(":8000", r))
 
 }
 
-// simplest way to handle errors
-func HandleError(err error) {
+func RegisterUser(w http.ResponseWriter, req *http.Request) {
+	var p Userj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&p)
 	if err != nil {
-		log.Fatal("error: ", err)
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
 	}
-}
-
-// add user service
-// input : user
-// functionality : add to database
-// output : string
-func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.UserResponse, error) {
-	username := req.GetName()
-	phone := req.GetPhone()
-	email := req.GetEmail()
+	username := p.Name
+	phone := p.Phone
+	email := p.Email
 	activities := []Act{}
 	user := User{
 
@@ -106,21 +115,25 @@ func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.U
 	}
 	fmt.Println(result)
 
-	resp := &pb.UserResponse{
-		Response: "The user " + username + " has been added.",
-	}
+	json.NewEncoder(w).Encode(result)
 
-	return resp, nil
 }
 
 // update user service
 // input : user
 // functionality : update user in database
 // output : string
-func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser) (*pb.UserResponse, error) {
-	username := req.User.Name
-	phone := req.User.Phone
-	email := req.User.Email
+func UpdateUserInfo(w http.ResponseWriter, req *http.Request) {
+	var p Userj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&p)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
+	}
+	username := p.Name
+	phone := p.Phone
+	email := p.Email
 
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://saiteja:saiteja@cluster0.ugdvlxb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
@@ -149,26 +162,29 @@ func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser
 
 	update = bson.M{"$set": bson.M{"phone": phone}}
 
-	result, err = coll.UpdateOne(context.TODO(), filter, update)
+	result1, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("user has been updated:", result)
+	fmt.Println("user has been updated:", result, result1)
 
-	resp := &pb.UserResponse{
-		Response: "The user " + username + " has been updated.",
-	}
-
-	return resp, nil
 }
 
 // get user service
 // input : name
 // functionality : gets user details
 // output : user
-func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.User, error) {
-	username := req.Name
+// url = http://localhost:8080/name=saiteja?name=John
+func GetUser(w http.ResponseWriter, req *http.Request) {
+	var p Getj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&p)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
+	}
+	username := p.Name
 
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://saiteja:saiteja@cluster0.ugdvlxb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
@@ -195,14 +211,10 @@ func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.User, 
 		log.Fatal("find...", err)
 	}
 	fmt.Println(user)
+	w.Header().Set("Content-Type", "application/json")
 
-	resp := &pb.User{
-		Name:  user.Name,
-		Email: user.Email,
-		Phone: user.Phone,
-	}
+	json.NewEncoder(w).Encode(user)
 
-	return resp, nil
 }
 
 //____________________________________________________________________________
@@ -211,13 +223,20 @@ func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.User, 
 // input : acivity
 // functionality : add to database
 // output : string
-func (a *ActivityService) AddActivity(ctx context.Context, req *pb.Activity) (*pb.UserResponse, error) {
-	activityType := req.Type
+func AddActivity(w http.ResponseWriter, req *http.Request) {
+	var actj Actj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&actj)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
+	}
+	activityType := actj.Type
 	// here I am using 'label' as key for user.. so label is user name
-	name := req.Label
-	label := req.Type + "ing"
-	duration := req.Duration
-	time1 := req.Time.AsTime()
+	name := actj.Name
+	label := actj.Type + "ing"
+	duration := int32(actj.Duration)
+	time1 := time.Now()
 
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://saiteja:saiteja@cluster0.ugdvlxb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
@@ -267,20 +286,23 @@ func (a *ActivityService) AddActivity(ctx context.Context, req *pb.Activity) (*p
 
 	fmt.Println("activity has been added:", res)
 
-	resp := &pb.UserResponse{
-		Response: "The activity " + activityType + " is added.",
-	}
-
-	return resp, nil
 }
 
 // activty isDone serive
 // input : username, activity
 // functionality : checks if that user had done that activity
 // output : boolean
-func (a *ActivityService) ActivityIsDone(ctx context.Context, req *pb.ActivityRequest) (*pb.Done, error) {
-	username := req.Username
-	activitytype := req.Type
+func ActivityIsDone(w http.ResponseWriter, req *http.Request) {
+	var actreqj Actreqj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&actreqj)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
+	}
+	username := actreqj.Name
+
+	activitytype := actreqj.Type
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://saiteja:saiteja@cluster0.ugdvlxb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
 		log.Fatal(err)
@@ -307,29 +329,49 @@ func (a *ActivityService) ActivityIsDone(ctx context.Context, req *pb.ActivityRe
 		log.Fatal(err)
 	}
 	activities := finduser.Activities
-	resp := &pb.Done{
-		Done: false,
-	}
+	flag := false
 	fmt.Println("ActivityIsDone() is working:", username, activitytype)
 	for i := 0; i < len(activities); i++ {
 		act := activities[i]
 		if act.Type == activitytype {
-			resp = &pb.Done{
-				Done: true,
-			}
+			flag = true
 			break
 		}
 	}
-	return resp, nil
+	if flag {
+		rsp := Actresj{Response: "Yes"}
+
+		// Marshal the struct into a JSON string
+		//resp, _ := json.Marshal(rsp)
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(rsp)
+	} else {
+		rsp := Actresj{Response: "No"}
+
+		// Marshal the struct into a JSON string
+		//resp, _ := json.Marshal(rsp)
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(rsp)
+	}
 }
 
-// activty isValid serive
+// activty isValid service
 // input : username, activity
 // functionality : checks if the activity done by user is valid
 // output : boolean
-func (a *ActivityService) ActivityIsValid(ctx context.Context, req *pb.ActivityRequest) (*pb.Valid, error) {
-	username := req.Username
-	activitytype := req.Type
+func ActivityIsValid(w http.ResponseWriter, req *http.Request) {
+	var actreqj Actreqj
+	// use json.NewDecoder to read the JSON payload from the request body
+	err := json.NewDecoder(req.Body).Decode(&actreqj)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON", http.StatusBadRequest)
+		return
+	}
+	username := actreqj.Name
+
+	activitytype := actreqj.Type
 
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://saiteja:saiteja@cluster0.ugdvlxb.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
@@ -356,15 +398,32 @@ func (a *ActivityService) ActivityIsValid(ctx context.Context, req *pb.ActivityR
 	if err != nil {
 		log.Fatal(err)
 	}
+	flag := false
 	activities := finduser.Activities
 	fmt.Println("ActivityIsValid() is working:", activities[0].Type)
 	for i := 0; i < len(activities); i++ {
 		act := activities[i]
 		if act.Type == activitytype {
 			if act.Duration >= 6 {
-				return &pb.Valid{Valid: true}, nil
+				flag = true
 			}
 		}
 	}
-	return &pb.Valid{Valid: false}, nil
+	if flag {
+		rsp := Actresj{Response: "Yes"}
+
+		// Marshal the struct into a JSON string
+		//resp, _ := json.Marshal(rsp)
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(rsp)
+	} else {
+		rsp := Actresj{Response: "No"}
+
+		// Marshal the struct into a JSON string
+		//resp, _ := json.Marshal(rsp)
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(rsp)
+	}
 }
