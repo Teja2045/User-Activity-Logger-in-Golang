@@ -1,0 +1,53 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package main;
+
+option go_package = ".;pb";
+//protoc --go_out=. --go_opt=paths=source_relative     --go-grpc_out=. --go-grpc_opt=paths=source_relative     proto/activity.proto
+service ActivityService {
+    rpc RegisterUser(User) returns (UserResponse) {}
+    rpc GetUser(Name) returns (User) {}
+    rpc UpdateUserInfo(UpdateUser) returns (UserResponse) {}
+    rpc AddActivity(Activity) returns (UserResponse) {}
+    rpc ActivityIsDone(ActivityRequest) returns (Done) {}
+    rpc ActivityIsValid(ActivityRequest) returns (Valid) {}
+}
+
+message User {
+    string name = 1;
+    string email = 2;
+    string phone = 3;
+}
+
+message UpdateUser {
+    User user = 1;
+}
+
+message Activity {
+    string type = 1;
+    google.protobuf.Timestamp time = 2;
+    int32 duration = 3;
+    string label = 4;
+}
+
+
+message Name {
+    string name = 1;
+}
+
+message UserResponse{
+    string response = 1;
+}
+
+message ActivityRequest {
+    string type = 1;
+    string username = 2;
+}
+
+message Done {
+    bool done = 1;
+}
+
+message Valid {
+    bool valid = 1;
+}
