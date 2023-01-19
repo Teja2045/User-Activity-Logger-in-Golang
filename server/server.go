@@ -73,6 +73,10 @@ func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.U
 	username := req.GetName()
 	phone := req.GetPhone()
 	email := req.GetEmail()
+	dbcollectionName := "user"
+	if username == "tester" {
+		dbcollectionName = "tester"
+	}
 	activities := []Act{}
 	user := User{
 
@@ -98,7 +102,7 @@ func (a *ActivityService) RegisterUser(ctx context.Context, req *pb.User) (*pb.U
 		log.Fatal(err)
 	}
 
-	coll := client.Database("task1").Collection("user")
+	coll := client.Database("task1").Collection(dbcollectionName)
 
 	result, err := coll.InsertOne(context.TODO(), user)
 	if err != nil {
@@ -137,7 +141,11 @@ func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser
 	if err != nil {
 		log.Fatal(err)
 	}
-	coll := client.Database("task1").Collection("user")
+	dbcollectionName := "user"
+	if username == "tester" {
+		dbcollectionName = "tester"
+	}
+	coll := client.Database("task1").Collection(dbcollectionName)
 	Key := "name"
 	filter := bson.M{Key: username}
 	update := bson.M{"$set": bson.M{"email": email}}
@@ -146,6 +154,7 @@ func (a *ActivityService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUser
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("user has been updated:", result)
 
 	update = bson.M{"$set": bson.M{"phone": phone}}
 
@@ -186,7 +195,11 @@ func (a *ActivityService) GetUser(ctx context.Context, req *pb.Name) (*pb.User, 
 		log.Fatal(err)
 	}
 
-	coll := client.Database("task1").Collection("user")
+	dbcollectionName := "user"
+	if username == "tester" {
+		dbcollectionName = "tester"
+	}
+	coll := client.Database("task1").Collection(dbcollectionName)
 
 	filter := bson.M{"name": username}
 	user := &User{}
@@ -236,7 +249,11 @@ func (a *ActivityService) AddActivity(ctx context.Context, req *pb.Activity) (*p
 		log.Fatal(err)
 	}
 
-	coll := client.Database("task1").Collection("user")
+	dbcollectionName := "user"
+	if name == "tester" {
+		dbcollectionName = "tester"
+	}
+	coll := client.Database("task1").Collection(dbcollectionName)
 
 	act := Act{
 		Type:     activityType,
@@ -297,7 +314,11 @@ func (a *ActivityService) ActivityIsDone(ctx context.Context, req *pb.ActivityRe
 		log.Fatal(err)
 	}
 
-	coll := client.Database("task1").Collection("user")
+	dbcollectionName := "user"
+	if username == "tester" {
+		dbcollectionName = "tester"
+	}
+	coll := client.Database("task1").Collection(dbcollectionName)
 
 	filter := bson.D{{Key: "name", Value: username}}
 
@@ -347,7 +368,11 @@ func (a *ActivityService) ActivityIsValid(ctx context.Context, req *pb.ActivityR
 		log.Fatal(err)
 	}
 
-	coll := client.Database("task1").Collection("user")
+	dbcollectionName := "user"
+	if username == "tester" {
+		dbcollectionName = "tester"
+	}
+	coll := client.Database("task1").Collection(dbcollectionName)
 
 	filter := bson.D{{Key: "name", Value: username}}
 
